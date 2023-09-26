@@ -10,33 +10,60 @@
 
 using namespace std;
 
-enum PickType {
-	Wood,
-	Iron,
-	Diamond
+//In this enum we have a price of pickaxe
+enum PickAxeType {
+	Wood = 5,
+	Iron = 10,
+	Diamond = 20
 };
+
 //Const
-const int MAXLIFE = 10;
+const int MAX_LIFE = 10;
 const string TITLE = "Un enano en Tlönbir";
-const int MAXPLAYCHOOSE = 3;
-const int MAXOPTION = 6;
-const int MAXGOLD = 100;
+const int MAX_PLAYCHOOSE = 3;
+const int MAX_OPTION = 6;
+const int MAX_GOLD = 100;
 const string PLAYERNAME = "Gorgomir";
 //ExploreCONST
-const int EXPLORECHANCE = 10;
-const int MINGOLDEXPLORE = 5;
-const int MAXGOLDEXPLORE = 20;
+const int EXPLORE_CHANCE = 10;
+const int MIN_GOLD_EXPLORE = 5;
+const int MAX_GOLD_EXPLORE = 20;
+const int EXPLORE_LOST_LIFE = 1;
 //CollectCONST
-const int BERRIESHEALING = 3;
-const int COLLECTCHANCE = 30;
+const int BERRIES_HEALING = 3;
+const int COLLECT_CHANCE = 30;
+//MineCONST
+const int MIN_LIFE = 4;
+const int MIN_DURABILITY_FOR_MINE = 0;
+const int MINE_LOST_LIFE = 1;
+const int IRON_WIN = 1;
+const float DURABILITY_LOST = 0.5f;
+//PickaxeCONST
+const int WOOD_MAX_DURABILITY = 10;
+const int IRON_MAX_DURABILITY = 15;
+const int DIAMOND_MAX_DURABILITY = 30;
+const int WOOD_CHANCE_MINE = 30;
+const int IRON_CHANCE_MINE = 50;
+const int DIAMOND_CHANCE_MINE = 60;
+//ForgeCONST
+const int IRON_NEED_TO_FORGE = 2;
+const int ARMOR_PRICE = 30;
 
 //Global variables
 int actualDay = 1;
 int gold = 5;
 int expMining = 0;
 int life = 10;
-string pick = "ninguno";
-int pickDurability = 0;
+string pickaxeName = "None";
+float pickActualDurability = 0;
+int actualIron = 0;
+int actualForgeArmor = 0;
+PickAxeType actualPickaxe = PickAxeType::Wood;
+int pickMaxDurability = 0;
+//GameOptions
+int playChoose;
+int option;
+bool rePlay = true;
 
 //Chek input option
 int CheckIntInput(int cant) {
@@ -101,6 +128,87 @@ void History() {
 	cout << "to navigate this vast world full of dangers and challenges." << endl;
 	PressAnyButton();
 }
+//Set Default Game
+void SetDefault() {
+	actualDay = 1;
+	gold = 5;
+	expMining = 0;
+	life = 10;
+	pickaxeName = "None";
+	pickActualDurability = 0;
+	actualIron = 0;
+	actualForgeArmor = 0;
+	actualPickaxe = PickAxeType::Wood;
+	pickMaxDurability = 0;
+}
+//Menu Game Logic
+int MenuGame() {
+	bool isValidOption = false;
+	int option;
+	do
+	{
+		cout << "Day = " << actualDay << endl;
+		cout << "Gorgomir" << endl;
+		cout << "Life = " << life << endl;
+		cout << "Gold = " << gold << endl;
+		cout << "Iron ingots = " << actualIron << endl;
+		cout << "Pickaxe = " << pickaxeName << " durability " << pickActualDurability << endl;
+		cout << "Forged armor = " << actualForgeArmor << endl;
+		cout << "1 - Explore area" << endl;
+		cout << "2 - Collect berries" << endl;
+		cout << "3 - Mine" << endl;
+		cout << "4 - Forge armor" << endl;
+		cout << "5 - Repair inventory" << endl;
+		cout << "6 - Buy a new pickaxe" << endl;
+		option = CheckIntInput(MAX_OPTION);
+
+		//Check if can mine
+		if (option == 3 && (life <= MIN_LIFE || pickActualDurability == MIN_DURABILITY_FOR_MINE)) {
+			cout << "You cant mine." << endl;
+			cout << "Please try with another option." << endl;
+			isValidOption = false;
+			PressAnyButton();
+		}
+		//Check if can forge
+		else if (option == 4 && actualIron < 2) {
+			cout << "You cant forge armor." << endl;
+			cout << "Please try with another option." << endl;
+			isValidOption = false;
+			PressAnyButton();
+		}
+		//Check if can Repair
+		else  if (option == 5 && (pickActualDurability == pickMaxDurability || gold == 0)) {
+			cout << "You cant repair the armor." << endl;
+			if (pickActualDurability == pickMaxDurability) {
+				cout << "Because your equip is full durability." << endl;
+			}
+			else if (gold == 0) {
+				cout << "Because you dont have gold." << endl;
+			}
+			cout << "Please try with another option." << endl;
+			isValidOption = false;
+			PressAnyButton();
+		}
+		//Check if can buy new pickaxe
+		else if (option == 6 && (actualPickaxe == PickAxeType::Diamond || gold < static_cast<int>(actualPickaxe))) {
+			cout << "You cant buy a new pickaxe." << endl;
+			if (actualPickaxe == PickAxeType::Diamond) {
+				cout << "Because you have a Diamond pickaxe." << endl;
+			}
+			else {
+				cout << "Because you dont have enough gold." << endl;
+			}
+			cout << "Please try with another option." << endl;
+			isValidOption = false;
+			PressAnyButton();
+		}
+		else {
+			isValidOption = true;
+		}
+	} while (!isValidOption);
+	system("cls");
+	return option;
+}
 //Random value
 int MakeRandom(int min = 0, int max = 100) {
 	random_device rd;
@@ -113,35 +221,168 @@ int MakeRandom(int min = 0, int max = 100) {
 void Explore() {
 	int chance = MakeRandom();
 	int sumGold = 0;
-	if (chance <= EXPLORECHANCE) {
-		sumGold = MakeRandom(MINGOLDEXPLORE,MAXGOLDEXPLORE);
+	if (chance <= EXPLORE_CHANCE) {
+		sumGold = MakeRandom(MIN_GOLD_EXPLORE, MAX_GOLD_EXPLORE);
 		gold += sumGold;
 		cout << "Congratulations, you obtained " << sumGold << " gold." << endl;
 	}
-	life -= 1;
+	life -= EXPLORE_LOST_LIFE;
 	cout << "You lost 1 life point." << endl;
-	PressAnyButton();
 }
 //Collect berries logic
 void Collect() {
 	int chance = MakeRandom();
-	if (chance <= COLLECTCHANCE) {
-		life += BERRIESHEALING;
-		if (life > MAXLIFE) {
-			life = MAXLIFE;
+	if (chance <= COLLECT_CHANCE) {
+		life += BERRIES_HEALING;
+		if (life > MAX_LIFE) {
+			life = MAX_LIFE;
 		}
-		cout << "Congratulations, you found berries, you healed " << BERRIESHEALING << " points." << endl;
+		cout << "Congratulations, you found berries, you healed " << BERRIES_HEALING << " points." << endl;
 	}
 	else {
 		cout << "Unfortunately, you didn't find anything." << endl;
 	}
-	PressAnyButton();
 }
+//Mine Logic
+void Mine() {
+	int chance;
+	int sumValues = 0;
+	bool isMining = false;
 
+	switch (actualPickaxe)
+	{
+	case Wood:
+		sumValues += WOOD_CHANCE_MINE;
+		break;
+	case Iron:
+		sumValues += IRON_CHANCE_MINE;
+		break;
+	case Diamond:
+		sumValues += DIAMOND_CHANCE_MINE;
+		break;
+	}
+	sumValues += expMining;
+
+	for (size_t i = 0; i < 4; i++)
+	{
+		chance = MakeRandom();
+		if (chance <= sumValues) {
+			isMining = true;
+			actualIron += IRON_WIN;
+			cout << "Congratulations, you mining " << IRON_WIN << " iron ingot!" << endl;
+		}
+		else {
+			cout << "Too bad, you don´t mining anything" << endl;
+		}
+		pickActualDurability -= DURABILITY_LOST;
+	}
+	if (!isMining) {
+		cout << "Congratulations, you gain a 1 point of mining experience" << endl;
+		expMining += 1;
+	}
+
+	cout << "You are exhausted by what you lose " << MINE_LOST_LIFE << " of life points" << endl;
+	life -= MINE_LOST_LIFE;
+}
+//Forge Armor Logic
+void Forge() {
+	do
+	{
+		actualIron -= IRON_NEED_TO_FORGE;
+		gold += ARMOR_PRICE;
+		cout << "The armor was successfully forged and sold for " << ARMOR_PRICE << " gold." << endl;
+	} while (actualIron >= IRON_NEED_TO_FORGE);
+}
+//Repair inventory Logic
+void Repair() {
+	int sum = 0;
+	do
+	{
+		gold -= 1;
+		pickActualDurability += 1;
+		sum += 1;
+	} while (pickActualDurability != pickMaxDurability && gold != 0);
+	cout << "You repaired " << sum << " durability points." << endl;
+	cout << "You Spend " << sum << " gold." << endl;
+}
+//Buy a new pickaxe  Logic
+void BuyNew() {
+	switch (actualPickaxe)
+	{
+	case PickAxeType::Wood:
+		if (pickaxeName == "None") {
+			cout << "You bought the wooden pickaxe for " << static_cast<int>(PickAxeType::Wood) << endl;
+			gold -= static_cast<int>(actualPickaxe);
+			pickActualDurability = WOOD_MAX_DURABILITY;
+			pickMaxDurability = WOOD_MAX_DURABILITY;
+			pickaxeName = "Wood";
+			break;
+		}
+		else {
+			cout << "You bought the iron pickaxe for " << static_cast<int>(PickAxeType::Iron) << endl;
+			actualPickaxe = PickAxeType::Iron;
+			gold -= static_cast<int>(actualPickaxe);
+			pickActualDurability = IRON_MAX_DURABILITY;
+			pickMaxDurability = IRON_MAX_DURABILITY;
+			pickaxeName = "Iron";
+			break;
+		}
+		break;
+	case PickAxeType::Iron:
+		cout << "You bought the diamond pickaxe for " << static_cast<int>(PickAxeType::Diamond) << endl;
+		actualPickaxe = PickAxeType::Diamond;
+		gold -= static_cast<int>(actualPickaxe);
+		pickActualDurability = DIAMOND_MAX_DURABILITY;
+		pickMaxDurability = DIAMOND_MAX_DURABILITY;
+		pickaxeName = "Diamond";
+		break;
+	default:
+		break;
+	}
+}
+//Replay option function
+void Replay() {
+	int reReplayChoose;
+	cout << "¿Play again?." << endl;
+	cout << "1 - RePlay" << endl;
+	cout << "2 - Back to menu" << endl;
+	cout << "3 - Exit" << endl;
+	reReplayChoose = CheckIntInput(3);
+	switch (reReplayChoose)
+	{
+	case 1:
+		SetDefault();
+		cout << "Okey! Good luck!" << endl;
+		PressAnyButton();
+		break;
+	case 2:
+		rePlay = false;
+		cout << "Back to menu." << endl;
+		PressAnyButton();
+		break;
+	case 3:
+		rePlay = false;
+		playChoose = 3;
+		break;
+	default:
+		break;
+	}
+}
+//Lose and victory Logic
+void EndGame() {
+	if (gold >= 100) {
+		cout << "Congratulations! " << PLAYERNAME << " reached the goal of 100 gold" << endl;
+		Replay();
+	}
+	else if (life == 0) {
+		cout << "What a pity, you don't have more life points, you lost.";
+		Replay();
+	}
+}
+//MAIN
 int main()
 {
-	int playChoose;
-	int option;
+	
 	//Menu
 	do
 	{
@@ -150,44 +391,53 @@ int main()
 		cout << "1 - Play" << endl;
 		cout << "2 - Instructions" << endl;
 		cout << "3 - Exit" << endl;
-		playChoose = CheckIntInput(MAXPLAYCHOOSE);
+		playChoose = CheckIntInput(MAX_PLAYCHOOSE);
 		system("cls");
 		switch (playChoose)
 		{
-		//GAME
+			//GAME
 		case 1:
+			rePlay = true;
+			SetDefault();
 			do
 			{
 				if (actualDay == 1) {
 					History();
 				}
-				cout << "Day = " << actualDay << endl;
-				cout << "Gorgomir" << endl;
-				cout << "Life = " << life << endl;
-				cout << "Gold = " << gold << endl;
-				cout << "Pickaxe = " << pick << endl;
-				cout << "1 - Explore area" << endl;
-				cout << "2 - Collect berries" << endl;
-				cout << "3 - Mine" << endl;
-				cout << "4 - Forge armor" << endl;
-				cout << "5 - Repair inventory" << endl;
-				cout << "6 - Buy a new pickaxe" << endl;
-				option = CheckIntInput(MAXOPTION);
-				system("cls");
+				option = MenuGame();
 				switch (option)
 				{
-				//Explore
+					//Explore
 				case 1:
 					Explore();
 					break;
-				//Collect
+					//Collect
 				case 2:
 					Collect();
+					break;
+					//Mine
+				case 3:
+					Mine();
+					break;
+					//Forge
+				case 4:
+					Forge();
+					break;
+					//Repair
+				case 5:
+					Repair();
+					break;
+					//Buy
+				case 6:
+					BuyNew();
 					break;
 				default:
 					break;
 				}
-			} while (true);
+				actualDay += 1;
+				PressAnyButton();
+				EndGame();
+			} while (rePlay);
 			break;
 		case 2:
 			Instructions();
