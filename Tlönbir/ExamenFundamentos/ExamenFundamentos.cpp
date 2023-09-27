@@ -449,6 +449,7 @@ int main()
 					break;
 				}
 				actualDay += 1;
+				ChanceNFT();
 				PressAnyButton();
 				EndGame();
 			} while (rePlay);
