@@ -48,6 +48,9 @@ const int DIAMOND_CHANCE_MINE = 60;
 //ForgeCONST
 const int IRON_NEED_TO_FORGE = 2;
 const int ARMOR_PRICE = 30;
+//NFT CONST
+const int WIN_GOLD_NFT = 10;
+const int CHANCE_NFT = 5;
 
 //Global variables
 int actualDay = 1;
@@ -377,6 +380,17 @@ void EndGame() {
 	else if (life == 0) {
 		cout << "What a pity, you don't have more life points, you lost.";
 		Replay();
+	}
+}
+//NFT CHANCE
+void ChanceNFT() {
+	int chance = MakeRandom();
+	if (chance <= CHANCE_NFT) {
+		cout << "You earned " << WIN_GOLD_NFT << " gold for investing in NFTs." << endl;
+		gold += WIN_GOLD_NFT;
+	}
+	else {
+		cout << "Nothing happened on this beautiful day." << endl;
 	}
 }
 //MAIN
